@@ -1,9 +1,7 @@
 #include <vector>
 #include <iostream>
 using namespace std;
-#include <vector>
-#include <iostream>
-using namespace std;
+
 
 class Solution 
 {
