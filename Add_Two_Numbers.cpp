@@ -4,7 +4,7 @@
 #include <stdlib.h>
 using namespace std;
 
-  struct ListNode 
+  struct ListNode  //
   {
       int val;
       ListNode *next;
