@@ -14,20 +14,24 @@ struct TreeNode {
     TreeNode(int x, TreeNode *left, TreeNode *right) : val(x), left(left), right(right) {}
 };
 class Solution {
-     static int isBalanced(TreeNode* root, int depth) 
+    static int checkHeight(TreeNode* root) 
     {
         if (!root)
-            return (1);
-        isBalanced(root->left);
-        isBalanced(root->left);
-        return (depth);
+            return (0);
+
+        int left = checkHeight(root->left);
+        
+        int right = checkHeight(root->right);
+
+        if (left == -1 || right == - 1 ||  std::abs((left - right)) > 1)
+            return (-1);
+
+        return (std::max(left, right) + 1);
     }
 public:
-    static bool isBalanced(TreeNode* root) 
+    static bool isBalanced(TreeNode* root)
     {
-       
-       std::cout <<  isBalanced(root, 0) << '\n';
-        return (0);
+        return (checkHeight(root) != -1);
     }
 };
 
@@ -62,39 +66,41 @@ void printTreePreorder(TreeNode *tree)
 }
 int main(void)
 {
-//    TreeNode tree3(3);
-//     tree3.left = NULL;
-//     tree3.right = NULL;
+   TreeNode tree3(3);
+    tree3.left = NULL;
+    tree3.right = NULL;
 
-//     TreeNode tree9(9);
-//     tree9.left = NULL;
-//     tree9.right = NULL;
+    TreeNode tree9(9);
+    tree9.left = NULL;
+    tree9.right = NULL;
 
-//     TreeNode tree20(20);
-//     tree20.left = NULL;
-//     tree20.right = NULL;
+    TreeNode tree20(20);
+    tree20.left = NULL;
+    tree20.right = NULL;
 
-//     TreeNode tree15(15);
-//     tree15.left = NULL;
-//     tree15.right = NULL;
+    TreeNode tree15(15);
+    tree15.left = NULL;
+    tree15.right = NULL;
 
-//     TreeNode tree7(7);
-//     tree7.left = NULL;
-//     tree7.right = NULL;
+    TreeNode tree7(7);
+    tree7.left = NULL;
+    tree7.right = NULL;
 
-//     TreeNode *root1 = &tree3;
+    TreeNode *root1 = &tree3;
 
-//     root1->left = &tree9;
-//     root1->right = &tree20;
+    root1->left = &tree9;
+    root1->right = &tree20;
 
-//     root1->right->left = &tree15;
-//     root1->right->right = &tree7;
-//     printTreePreorder(root1);
+    root1->right->left = &tree15;
+    root1->right->right = &tree7;
+    // printTreePreorder(root1);
 
-    // Solution::lowestCommonAncestor(tree, &p, &q);
-    // std::cout << "==== " << Solution::isBalanced(tree) << "\n";
+    //  printTreePreorder(root1);
+    std::cout <<  Solution::isBalanced(root1) << '\n' << "\n\n";
 
     // ===============================//
+
+
     TreeNode tree1(1);
     tree1.left = NULL;
     tree1.right = NULL;
@@ -134,7 +140,10 @@ int main(void)
     root2->left->left->left = &tree4_ll;
     root2->left->left->right = &tree4_lr;
 
-     printTreePreorder(root2);
+   // //  printTreePreorder(root2);
+      std::cout <<  Solution::isBalanced(root2) << '\n';
+
+
     // TreeNode *t = Solution::lowestCommonAncestor(tree, &p, &q);
     // std::cout << t->val << "\n";
 
