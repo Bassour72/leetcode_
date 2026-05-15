@@ -92,7 +92,7 @@ int main() {
     ListNode* l3 = new ListNode(5);
     l3->next = new ListNode(6);
 
-    // C++98 way
+   
     std::vector<ListNode*> lists;
     lists.push_back(l1);
     lists.push_back(l2);
@@ -104,7 +104,3 @@ int main() {
     freeList(merged);
     return 0;
 }
-// ✅ Output
-// 1 1 2 3 4 4 5 6
-
-// If you want next level (faster version using heap / priority_queue), tell me and I’ll show you 🔥
