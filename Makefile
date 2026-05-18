@@ -3,14 +3,14 @@ CXXFLAGS = -std=c++98 -Wall -Wextra -Werror
 DEBUG_FLAGS = -fsanitize=address -g3
 VALGRIND = valgrind --leak-check=full  --track-fds=all 
 FILE ?= main
-
+SHELL := /bin/bash
 all:
 ifeq ($(FILE),main)
 	$(error Please specify a file using 'make FILE=filename')
 else
 	@echo "Running with custom file: $(FILE)"
 	$(CXX) $(CXXFLAGS) $(FILE).c++ -o $(FILE)
-	./$(FILE)
+	@time( ./$(FILE) )
 endif
 
 leaks:
