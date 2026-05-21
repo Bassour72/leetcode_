@@ -1,6 +1,3 @@
-#include <iostream>
-#include <string>
-#include <map>
 
 
 #include <iostream>
@@ -9,7 +6,7 @@
 #include <map>
 class Solution {
 public:
-    static int romanToInt(std::string s) 
+    static std::string intToRoman(int num) 
     {
         std::map<char, int > mp;
         mp.insert(std::pair<char, int>('I', 1));
@@ -21,7 +18,7 @@ public:
         mp.insert(std::pair<char, int>('M', 1000));
         int nbr = 0;
         int sub = 0;
-        for (size_t i = 0; i < s.length(); i++)
+        while ( num > 0)
         {
             
             if (mp[s[i]] < mp[s[i + 1]])
@@ -35,7 +32,9 @@ public:
                 sub = 0;
             }
         }
-        return (nbr);
+        std::stringstream os; 
+         os << nbr; 
+        return (os.str());
     }
 };
 
