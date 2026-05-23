@@ -1,5 +1,5 @@
-CXX = g++
-CXXFLAGS = -std=c++98 -Wall -Wextra -Werror
+CPP = g++
+CPPFLAGS = -std=c++98 -Wall -Wextra -Werror
 DEBUG_FLAGS = -fsanitize=address -g3
 VALGRIND = valgrind --leak-check=full  --track-fds=all 
 FILE ?= main
@@ -9,7 +9,7 @@ ifeq ($(FILE),main)
 	$(error Please specify a file using 'make FILE=filename')
 else
 	@echo "Running with custom file: $(FILE)"
-	$(CXX) $(CXXFLAGS) $(FILE).c++ -o $(FILE)
+	$(CPP) $(CPPFLAGS) $(FILE).c++ -o $(FILE)
 	@time( ./$(FILE) )
 endif
 
@@ -17,15 +17,15 @@ leaks:
 ifeq ($(FILE),main)
 	$(error Please specify a file using 'make leaks FILE=filename')
 endif
-	$(CXX) $(CXXFLAGS) $(FILE).c++ -o $(FILE)
+	$(CPP) $(CPPFLAGS) $(FILE).c++ -o $(FILE)
 	$(VALGRIND) ./$(FILE)
 
 debug:
 ifeq ($(FILE),main)
 	$(error Please specify a file using 'make debug FILE=filename')
 endif
-	$(CXX) $(CXXFLAGS) $(DEBUG_FLAGS) $(FILE).c++ -o $(FILE)
-	./$(FILE)
+	$(CPP) $(CPPFLAGS) $(DEBUG_FLAGS) $(FILE).c++ -o $(FILE)
+	@time( ./$(FILE) )
 
 clean:
 	rm -f $(FILE)

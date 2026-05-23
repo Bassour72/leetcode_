@@ -42,3 +42,5 @@ int main(void)
 {
     std::cout << Solution::isPalindrome("A man, a plan, a canal: Panama") << '\n';
 }
+
+

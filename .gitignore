@@ -1,0 +1,15 @@
+# git add romanToInt.cpp
+# git commit -m "Solve Roman to Integer problem"
+# git commit -m "Add solution for Roman to Integer"
+# git commit -m "Implement Roman to Integer solution"
+# git commit -m "Refactor Roman to Integer solution"
+# git commit -m "Optimize Roman to Integer solution"
+# git commit -m "Fix edge cases in Roman to Integer solution"
+
+
+
+*.txt
+
+
+
+
