@@ -174,12 +174,13 @@ bigint bigint::operator>>( const bigint & other)
 
 bigint bigint::operator<<( const bigint & other)
 {
-    bigint temp = *this;
+    bigint temp = *this; 
     size_t  n = convertToInt(other._nbr);
     for (size_t i = 0; i < n; i++)
     {
         temp._nbr.push_back(0);
     }
+    
     return (temp);
 }
 
@@ -195,7 +196,6 @@ bigint &bigint::operator>>=(int nbr)
     *this = this->operator>>(nbr);
     return (*this);
 }
-
 
 bigint &bigint::operator<<=(int nbr)
 {
