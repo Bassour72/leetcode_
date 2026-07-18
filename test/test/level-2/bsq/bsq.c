@@ -14,17 +14,20 @@ typedef struct
 
 int min3(int a, int b, int c)
 {
-    if(a<=b&&a<=c)return a;
-    if(b<=a&&b<=c)return b;
+    if( a <= b && a <= c)
+        return (a);
+    if(b <= a && b <= c)
+        return (b);
     else
-        return c;
+        return (c);
 }
 
 
 int sstrlen(char *s)
 {
     char *p =s;
-    while(*p)p++;
+    while(*p)
+        p++;
     return p - s;
 }
 
@@ -32,7 +35,8 @@ int sstrlen(char *s)
 int main(int ac, char **av)
 {
     FILE *fi = ac > 1 ? fopen(av[1], "r"): stdin;
-    if(!fi) return fprintf(stderr, "Error\n"), 1;
+    if(!fi) 
+        return fprintf(stderr, "Error\n"), 1;
 
     int h = 0;
     char e = 0;

@@ -5,7 +5,7 @@
 
 int main(int ac, char **av)
 {
-    // first part 
+ 
     if(ac != 4)
         return 0;
     
@@ -28,54 +28,60 @@ int main(int ac, char **av)
     }
     
 
-    // 2 part 
+    
     char c;
-    int x = 0; //w or 0
-    int y = 0; // h or 0
+    int x = 0; 
+    int y = 0; 
     int pen = 0;
 
     while(read(0,&c,1) > 0)
     {
-        if(c == 'w' && y > 0) y--;
-        else if(c == 's' && y < h - 1) y++;
-        else if(c == 'a' && x > 0) x--;
-        else if(c == 'd' && x < w - 1) x++;
-        else if(c == 'x') pen =  !pen;
+        if(c == 'w' && y > 0) 
+            y--;
+        else if(c == 's' && y < h - 1) 
+            y++;
+        else if(c == 'a' && x > 0) 
+            x--;
+        else if(c == 'd' && x < w - 1) 
+            x++;
+        else if(c == 'x') 
+            pen =  !pen;
         if(pen)
             board[y][x] = 1;
     }
 
-/// 3 part 
+
     while(iter > 0)
     {
         for(int i = 0; i < h ; i++)
         {
             for(int j = 0; j < w; j++)
             {
-                int nega = 0;
+                int emp = 0;
 
                 for(int dy = -1; dy <= 1; dy++)
                 {
                     for(int dx = -1; dx <= 1; dx++)
                     {
-                        if(dy == 0 && dx == 0) continue;
+                        if(dy == 0 && dx == 0) 
+                            continue;
 
                         int ni = dy + i;
                         int nj = dx + j;
                         if(ni >= 0 && ni < h && nj >= 0 && nj < w)
                         {
                             if(board[ni][nj] == 1)
-                                nega++;
+                                emp++;
                         }
                     }
                 }
                 if(board[i][j] == 1)
                 {
-                    temp[i][j] = (nega == 2 || nega == 3);
+                    temp[i][j] = (emp == 2 || emp == 3);
                 }
                 else
                 {
-                    temp[i][j] = (nega == 3);
+                    temp[i][j] = (emp == 3);
                 }
 
             }
@@ -91,7 +97,7 @@ int main(int ac, char **av)
     }
 
 
-//4 part 
+
     for(int i = 0 ; i < h;i++)
     {
         for(int j = 0; j < w; j++)

@@ -6,7 +6,7 @@ CXXFLAGS    = -Wall -Wextra -Werror -g
 VALGRIND    = valgrind -s --leak-check=full --show-leak-kinds=all --track-fds=yes
 ASAN_FLAGS  = -fsanitize=address -fno-omit-frame-pointer -g3
 
-SRCS        = gol.c
+SRCS        = main.c
 OBJS        = $(SRCS:.c=.o)
 
 # --- Rules ---
