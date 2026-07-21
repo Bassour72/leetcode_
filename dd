@@ -1,0 +1,303 @@
+
+#include "../Core.hpp"
+
+
+Core::CgiResponse Core::ParseCgiResponse(const std::string &raw)
+{
+    CgiResponse response;
+
+    size_t pos = raw.find("\r\n\r\n");
+    size_t sepLen = 4;
+
+    if (pos == std::string::npos)
+    {
+        pos = raw.find("\n\n");
+        sepLen = 2;
+    }
+
+    if (pos == std::string::npos)
+    {
+        // error cgi response
+        return response;
+    }
+
+    std::string headerPart = raw.substr(0, pos);
+    response.body = raw.substr(pos + sepLen);
+
+    std::stringstream ss(headerPart);
+    std::string line;
+
+    while (std::getline(ss, line))
+    {
+        if (!line.empty() && line[line.size() - 1] == '\r')
+            line.erase(line.size() - 1);
+
+        size_t colon = line.find(':');
+
+        if (colon == std::string::npos)
+            continue;
+
+        std::string key = line.substr(0, colon);
+        std::string value = line.substr(colon + 1);
+
+        while (!value.empty() && value[0] == ' ')
+            value.erase(0, 1);
+
+        response.headers[key] = value;
+    }
+
+    return response;
+}
+
+std::string Core::ParserClientCgiHeader(std::string &rawBuffer, int ContentLength)
+
+{
+	(void)ContentLength;
+	CgiResponse cgi = ParseCgiResponse(rawBuffer);
+
+	std::string http;
+
+	http += "HTTP/1.1 200 OK\r\n";
+
+	if (cgi.headers.count("Content-Type"))
+		http += "Content-Type: " + cgi.headers["Content-Type"] + "\r\n";
+	else
+		http += "Content-Type: text/plain\r\n";
+
+	if (cgi.headers.count("Set-Cookie"))
+		http += "Set-Cookie: " + cgi.headers["Set-Cookie"] + "\r\n";
+
+	http += "Content-Length: " + num_to_str(cgi.body.size()) + "\r\n";
+	http += "Connection: close\r\n";
+	http += "\r\n";
+    std::cout << "{SIZE} << " << cgi.body.size() << "{SIZE}\n\n";
+	http += cgi.body;
+	return http;
+}
+
+
+int Core::ReadClientCgiDataFromPipe(int fd, std::string &buffer)
+{
+    char buf[RECV_CGI_BUFFER_SIZE];
+    ssize_t bytesRead;
+    int total = 0;
+	std::memset(buf, 0,  sizeof(buf));
+    while ((bytesRead = read(fd, buf, sizeof(buf))) > 0)
+    {
+        buffer.append(buf, bytesRead);
+        total += bytesRead;
+    }
+    if (bytesRead < 0)
+    {
+        perror("read");
+        return -1;
+    }
+
+    return total;
+}
+
+void Core::RemoveCgiEvents(uintptr_t fd)
+{
+    // if (_cgiPids.find(fd) == _cgiPids.end())
+    //     return;
+    std::cout << "\n********************[" << fd <<"]***********************\n";
+    struct kevent CgiEvent[2];
+	EV_SET(&CgiEvent[0], fd, EVFILT_READ,  EV_DELETE, 0, 0, NULL);
+	EV_SET(&CgiEvent[1], fd, EVFILT_TIMER,  EV_DELETE, 0, 0, NULL); 
+
+	if (kevent(_kq, CgiEvent, 2, NULL, 0, NULL) == -1)
+		std::cout << "[ERROR] -> failed to delete cgi events :" << strerror(errno);
+
+}
+
+void Core::handleCgiEvent(struct kevent e)
+{
+    Client *client = ClientHandler::getClient(_cgiFds[e.ident]);
+    
+std::cout
+    << "ident=" << e.ident
+    << " filter=" << e.filter
+    << " flags=" << e.flags
+    << std::endl;
+    if (!client)
+    {
+        RemoveCgiEvents(e.ident);
+        CleanupCGI(e.ident);
+        return;
+    }
+    if (e.filter == EVFILT_READ)
+    {    
+        std::cout << "[EVFILT_READ] ===================> " << e.filter <<"\n";
+        HandleCGIRead(client, e.ident);
+        return;
+    }
+    if (e.filter == EVFILT_TIMER)
+    {
+        std::cout << "[TIMEOUT] ===================> " << e.filter <<"\n";
+        HandleCGITimeout(client, e.ident);
+        return;
+    }
+
+  
+}
+
+std::string Core::BuildHTTPResponse(std::string  output)
+{
+    // Check if output empty 
+    std::string Content = ParserClientCgiHeader(output, output.length());
+	// client->setResBuff(newBuffer);
+    // Content += client->getResBuff();
+	std::cout << "[content] ==> {" <<  Content << "}\n\n\n";
+    return (Content);
+}
+
+Core::CGIState Core::WaitForCGI(int fd)
+{
+
+    int status;
+	pid_t pid = waitpid(_cgiPids[fd], &status, WNOHANG);
+    if (pid > 0)
+    {
+        if (WIFEXITED(status))
+        {
+            int exit_code = WEXITSTATUS(status);
+            if (exit_code != 0)
+                return CGI_FAILED;
+            else
+                return CGI_RUNNING; 
+        }
+    }
+
+    if (pid == 0)
+        return CGI_FINISHED;
+    return CGI_FINISHED;
+
+}
+
+void Core::HandleCGIRead(Client *client, int fd)
+{
+    std::string output;
+
+    int bytes = ReadClientCgiDataFromPipe(fd, output);
+
+    if (bytes < 0)
+    {
+        HandleCGIError(client, fd);
+        return;
+    }
+
+    CGIState state = WaitForCGI(fd);
+    if (state == NOT_CGI)
+    {    
+        std::cout << "[WARRING]#######################################> " << "NOT_CGI " <<"\n";
+        return;
+    }
+    else if (state == CGI_RUNNING)
+    {    
+        std::cout << "[WARRING]#######################################> " << "CGI_RUNNING " <<"\n";
+        std::string response = "";
+        if (client->getResBuff().empty())
+        {    
+            response = BuildHTTPResponse(output);
+             client->setResBuff(response);
+        }
+        else
+        {
+            std::string temp = client->getBodyBuff();
+            temp += output;
+            response = temp;
+            client->setResBuff(response);
+        }
+        return;
+    }
+
+    else if (state == CGI_FAILED)
+    {
+		std::cout << "[WARRING]#######################################> " << "CGI FAILED " <<"\n";
+        HandleCGIError(client, fd);
+        return;
+    }
+    else if (state == CGI_FINISHED)
+    {
+        // std::cout << "[OUTPUT] ===================> " << output<<"\n";
+        std::cout << "[WARRING]#######################################> " << "CGI_FINISHED " <<"\n";
+        std::string response = "";
+        if (client->getResBuff().empty())
+        {    response = BuildHTTPResponse(output);
+             client->setResBuff(response);
+        }
+        else
+        {
+            std::string temp = client->getBodyBuff();
+            temp += output;
+            response = temp;
+            client->setResBuff(response);
+        }
+
+        RemoveCgiEvents(fd);
+
+        ClientHandler::toggleSocketWriteEvents(_cgiFds[fd], true); //todo try to catch the excption
+
+        CleanupCGI(fd);
+    }
+
+}
+
+
+void Core::HandleCGITimeout(Client *client, int fd)
+{
+    KillCGI(fd);
+
+    RemoveCgiEvents(fd);
+
+    CleanupCGI(fd);
+
+    ClientHandler::error_func(*client, "Request Timeout under cgi", "408");
+
+    ClientHandler::toggleSocketWriteEvents(_cgiFds[fd], true);
+}
+
+void Core::HandleCGIError(Client *client, int fd)
+{
+    RemoveCgiEvents(fd);
+
+    CleanupCGI(fd);
+
+    ClientHandler::error_func(*client, "Internal Server Error under cgi", "500");
+    try
+    {
+        ClientHandler::toggleSocketWriteEvents(_cgiFds[fd], true); //todo try to catch the excption
+    }
+    catch(...)
+    {
+        // std::cerr << e.what() << '\n';
+    }
+    
+}
+
+
+void Core::CleanupCGI(int fd)
+{
+    close(fd);
+
+    _cgiFds.erase(fd);
+
+    _cgiPids.erase(fd);
+}
+
+
+void Core::KillCGI(int fd)
+{
+    if (_cgiPids.find(fd) == _cgiPids.end())
+        return;
+
+    kill(_cgiPids[fd], SIGTERM);
+
+    waitpid(_cgiPids[fd], NULL, 0);
+}
+
+
+
+
+
+
